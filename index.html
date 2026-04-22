@@ -1,222 +1,250 @@
-<script type="text/babel">
-    const { useState, useEffect } = React;
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Smart 학급 관리 시스템</title>
+    <!-- 테일윈드 CSS 로드 (디자인용) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', 'Apple SD Gothic Neo', sans-serif; background-color: #f1f5f9; }
+        .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
+        .hidden-view { display: none; }
+        textarea { resize: none; }
+    </style>
+</head>
+<body>
+    <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+        <div class="flex items-center gap-2">
+            <span class="text-2xl">🏫</span>
+            <h1 class="text-xl font-bold text-slate-800">Smart 학급관리</h1>
+        </div>
+        <button id="backToListBtn" class="hidden-view text-blue-600 font-bold px-4 py-2 hover:bg-blue-50 rounded-lg">← 목록으로 돌아가기</button>
+    </nav>
 
-    const App = () => {
-        // 데이터 로드 (로컬스토리지)
-        const [students, setStudents] = useState(() => {
-            try {
-                const savedData = localStorage.getItem('classData_v1');
-                return savedData ? JSON.parse(savedData) : [
-                    { id: 1, name: "예시학생", number: 1, consultation: [], career: "", seteuk: "", jongteuk: "" }
-                ];
-            } catch (e) {
-                return [];
-            }
-        });
+    <main class="max-w-6xl mx-auto p-4 md:p-8">
+        <div id="listView" class="animate-fade-in">
+            <div class="flex justify-between items-end mb-6">
+                <div>
+                    <h2 class="text-2xl font-bold text-slate-800">우리 반 명단</h2>
+                    <p id="studentCount" class="text-slate-500 text-sm">전체 학생 수: 0명</p>
+                </div>
+                <button onclick="addStudent()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 active:scale-95 transition-all">+ 학생 추가</button>
+            </div>
+            
+            <div class="card overflow-hidden">
+                <table class="w-full text-left">
+                    <thead class="bg-slate-50 border-b border-slate-200">
+                        <tr>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-400">번호</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-400">이름</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-400">최근 상담</th>
+                            <th class="px-6 py-4 text-xs font-bold text-slate-400 text-right">관리</th>
+                        </tr>
+                    </thead>
+                    <tbody id="studentTableBody" class="divide-y divide-slate-100">
+                        <!-- 데이터가 여기에 동적으로 생성됩니다 -->
+                    </tbody>
+                </table>
+            </div>
+        </div>
 
-        const [selectedId, setSelectedId] = useState(null);
-        const [activeTab, setActiveTab] = useState('list');
+        <div id="detailView" class="hidden-view">
+            <div class="mb-6">
+                <h2 id="selectedStudentName" class="text-3xl font-bold text-slate-800">학생 이름</h2>
+                <p class="text-slate-500 text-sm">상담 기록 및 생기부 관리</p>
+            </div>
 
-        // 데이터 자동 저장
-        useEffect(() => {
-            localStorage.setItem('classData_v1', JSON.stringify(students));
-        }, [students]);
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 좌측/중앙 섹션 -->
+                <div class="lg:col-span-2 space-y-6">
+                    <div class="card p-6">
+                        <div class="flex justify-between items-center mb-6">
+                            <h3 class="text-lg font-bold flex items-center gap-2 text-slate-800">
+                                <span class="w-2 h-6 bg-blue-600 rounded-full"></span> 1. 개별 상담 내역
+                            </h3>
+                            <button onclick="addConsultation()" class="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-100">+ 상담 추가</button>
+                        </div>
+                        <div id="consultationList" class="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                            <!-- 상담 내역이 여기에 표시됨 -->
+                        </div>
+                    </div>
 
-        const addStudent = () => {
+                    <div class="card p-6">
+                        <h3 class="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
+                            <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. 진로 지도 방향
+                        </h3>
+                        <textarea id="careerInput" oninput="saveCurrentData()" class="w-full h-32 p-4 text-sm bg-slate-50 border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400" placeholder="진로 희망사항 및 핵심 지도 내용을 입력하세요..."></textarea>
+                    </div>
+                </div>
+
+                <!-- 우측 섹션 -->
+                <div class="space-y-6">
+                    <div class="bg-indigo-900 p-6 rounded-2xl shadow-xl text-white">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                            <span class="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 정리
+                        </h3>
+                        <div class="space-y-6">
+                            <div>
+                                <label class="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">세부능력 및 특기사항</label>
+                                <textarea id="seteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-indigo-50" placeholder="교과별 역량 기록..."></textarea>
+                            </div>
+                            <div>
+                                <label class="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">행동특성 및 종합의견</label>
+                                <textarea id="jongteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-indigo-50" placeholder="인성 및 생활 태도 기록..."></textarea>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="py-10 text-center text-slate-400 text-xs">
+        © 2024 Class Management System - Made for Teachers
+    </footer>
+
+    <script>
+        let students = JSON.parse(localStorage.getItem('classData_final') || '[]');
+        let currentStudentId = null;
+
+        // 초기 화면 렌더링
+        window.onload = () => {
+            renderList();
+            document.getElementById('backToListBtn').addEventListener('click', () => {
+                document.getElementById('listView').style.display = 'block';
+                document.getElementById('detailView').style.display = 'none';
+                document.getElementById('backToListBtn').style.display = 'none';
+                renderList();
+            });
+        };
+
+        function addStudent() {
             const name = prompt("학생 이름을 입력하세요:");
             if (name && name.trim()) {
-                const newId = Date.now();
-                const newNumber = students.length > 0 ? Math.max(...students.map(s => s.number)) + 1 : 1;
-                setStudents([...students, { 
-                    id: newId, name, number: newNumber, consultation: [], career: "", seteuk: "", jongteuk: "" 
-                }]);
+                const newStudent = {
+                    id: Date.now(),
+                    name: name.trim(),
+                    number: students.length + 1,
+                    consultation: [],
+                    career: "",
+                    seteuk: "",
+                    jongteuk: ""
+                };
+                students.push(newStudent);
+                saveData();
+                renderList();
             }
-        };
+        }
 
-        const deleteStudent = (id) => {
-            if(confirm("이 학생의 모든 기록을 삭제할까요?")) {
-                setStudents(students.filter(s => s.id !== id));
-                if (selectedId === id) setSelectedId(null);
+        function renderList() {
+            const tbody = document.getElementById('studentTableBody');
+            const countText = document.getElementById('studentCount');
+            tbody.innerHTML = '';
+            countText.innerText = `전체 학생 수: ${students.length}명`;
+
+            if (students.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-10 text-center text-slate-400 italic text-sm">등록된 학생이 없습니다. '학생 추가'를 눌러주세요.</td></tr>`;
+                return;
             }
-        };
 
-        const updateData = (id, field, value) => {
-            setStudents(students.map(s => s.id === id ? { ...s, [field]: value } : s));
-        };
-
-        const addConsult = (id) => {
-            const category = prompt("상담 항목 (예: 자격증, 학과공부, 근태, 수행평가):", "일반상담");
-            const content = prompt("상담 내용을 입력하세요:");
-            if (category && content) {
-                const updated = students.map(s => {
-                    if (s.id === id) {
-                        return { 
-                            ...s, 
-                            consultation: [...s.consultation, { 
-                                date: new Date().toLocaleDateString(), 
-                                category, 
-                                content 
-                            }] 
-                        };
-                    }
-                    return s;
-                });
-                setStudents(updated);
-            }
-        };
-
-        const selectedStudent = students.find(s => s.id === selectedId);
-
-        return (
-            <div className="min-h-screen flex flex-col">
-                <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
-                    <div className="flex items-center gap-2">
-                        <span className="text-2xl">🏫</span>
-                        <h1 className="text-xl font-bold text-slate-800 tracking-tight">Smart 학급관리 v1.2</h1>
-                    </div>
-                    <div className="flex gap-1">
-                        <button onClick={() => {setActiveTab('list'); setSelectedId(null);}} className={`px-4 py-2 text-sm transition-all ${activeTab === 'list' ? 'tab-active' : 'text-slate-500 hover:text-slate-700'}`}>학생 목록</button>
-                        {selectedId && (
-                            <button className="px-4 py-2 text-sm tab-active font-bold">
-                                👤 {selectedStudent?.name}
-                            </button>
-                        )}
-                    </div>
-                </nav>
-
-                <main className="flex-1 p-4 md:p-8">
-                    {activeTab === 'list' || !selectedStudent ? (
-                        <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
-                            <div className="flex justify-between items-end mb-6">
-                                <div>
-                                    <h2 className="text-2xl font-bold text-slate-800">우리 반 명단</h2>
-                                    <p className="text-slate-500 text-sm">전체 학생 수: {students.length}명</p>
-                                </div>
-                                <button onClick={addStudent} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all active:scale-95">+ 학생 추가</button>
-                            </div>
-                            
-                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
-                                <table className="w-full text-left">
-                                    <thead className="bg-slate-50 border-b border-slate-200">
-                                        <tr>
-                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">번호</th>
-                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">이름</th>
-                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">최근 기록</th>
-                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase text-right">관리</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody className="divide-y divide-slate-100">
-                                        {students.map(s => (
-                                            <tr key={s.id} className="hover:bg-blue-50/50 transition-colors group">
-                                                <td className="px-6 py-4 text-slate-500 font-medium">{s.number}</td>
-                                                <td className="px-6 py-4 font-bold text-slate-700">{s.name}</td>
-                                                <td className="px-6 py-4 text-sm text-slate-400">
-                                                    {s.consultation.length > 0 ? s.consultation[s.consultation.length-1].date : "기록 없음"}
-                                                </td>
-                                                <td className="px-6 py-4 text-right">
-                                                    <div className="flex justify-end gap-2">
-                                                        <button onClick={() => {setSelectedId(s.id); setActiveTab('detail');}} className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">상세보기</button>
-                                                        <button onClick={() => deleteStudent(s.id)} className="text-slate-300 hover:text-red-500 p-1.5 transition-colors">🗑️</button>
-                                                    </div>
-                                                </td>
-                                            </tr>
-                                        ))}
-                                    </tbody>
-                                </table>
-                            </div>
-                            <p className="mt-6 text-center text-xs text-slate-400">※ 모든 정보는 선생님의 현재 브라우저(PC/모바일)에만 안전하게 저장됩니다.</p>
-                        </div>
-                    ) : (
-                        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
-                            {/* 좌측/중앙: 상담 및 진로 */}
-                            <div className="lg:col-span-2 space-y-6">
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                    <div className="flex justify-between items-center mb-6">
-                                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
-                                            <span className="w-2 h-6 bg-blue-600 rounded-full"></span> 1. 개별 상담 내역
-                                        </h3>
-                                        <button onClick={() => addConsult(selectedStudent.id)} className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-100 transition-colors">+ 기록 추가</button>
-                                    </div>
-                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
-                                        {selectedStudent.consultation.length === 0 ? (
-                                            <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl text-slate-400 text-sm italic">아직 기록된 상담 내용이 없습니다.</div>
-                                        ) : (
-                                            [...selectedStudent.consultation].reverse().map((c, i) => (
-                                                <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group">
-                                                    <div className="flex justify-between items-start mb-2">
-                                                        <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-blue-600 uppercase">{c.category}</span>
-                                                        <span className="text-[10px] text-slate-400 font-medium">{c.date}</span>
-                                                    </div>
-                                                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{c.content}</p>
-                                                </div>
-                                            ))
-                                        )}
-                                    </div>
-                                </div>
-
-                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
-                                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
-                                        <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. 진로 지도 방향
-                                    </h3>
-                                    <textarea 
-                                        className="w-full h-32 p-4 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all resize-none bg-slate-50/50"
-                                        placeholder="학생의 진로 희망사항 및 지도 핵심 내용을 입력하세요..."
-                                        value={selectedStudent.career}
-                                        onChange={(e) => updateData(selectedStudent.id, 'career', e.target.value)}
-                                    />
-                                </div>
-                            </div>
-
-                            {/* 우측: 생기부 섹션 */}
-                            <div className="space-y-6">
-                                <div className="bg-indigo-900 p-6 rounded-2xl shadow-xl text-white">
-                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                        <span className="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 초안 정리
-                                    </h3>
-                                    
-                                    <div className="space-y-6">
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">세부능력 및 특기사항 (세특)</label>
-                                            <textarea 
-                                                className="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none text-indigo-50 placeholder:text-indigo-400"
-                                                placeholder="과목별 역량 및 구체적 활동 근거 기록..."
-                                                value={selectedStudent.seteuk}
-                                                onChange={(e) => updateData(selectedStudent.id, 'seteuk', e.target.value)}
-                                            />
-                                        </div>
-
-                                        <div>
-                                            <label className="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">행동특성 및 종합의견 (종특)</label>
-                                            <textarea 
-                                                className="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none text-indigo-50 placeholder:text-indigo-400"
-                                                placeholder="학생의 성품, 리더십, 성장 가능성 기록..."
-                                                value={selectedStudent.jongteuk}
-                                                onChange={(e) => updateData(selectedStudent.id, 'jongteuk', e.target.value)}
-                                            />
-                                        </div>
-                                    </div>
-
-                                    <div className="mt-6 p-4 bg-indigo-800/30 rounded-xl border border-indigo-700/50">
-                                        <h4 className="text-xs font-bold text-yellow-400 mb-2">💡 작성 팁</h4>
-                                        <ul className="text-[11px] text-indigo-200 space-y-1">
-                                            <li>• 상담 기록의 키워드를 문장으로 연결하세요.</li>
-                                            <li>• '관찰 - 변화 - 성장'의 흐름으로 작성하세요.</li>
-                                            <li>• 구체적인 수행평가 사례를 포함하면 좋습니다.</li>
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-                </main>
+            students.sort((a, b) => a.number - b.number).forEach(s => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-blue-50/50 transition-colors";
+                const lastConsult = s.consultation.length > 0 ? s.consultation[s.consultation.length - 1].date : "기록 없음";
                 
-                <footer className="py-6 text-center">
-                    <p className="text-slate-400 text-[10px]">© 2024 Class Management System - Made for Teachers</p>
-                </footer>
-            </div>
-        );
-    };
+                tr.innerHTML = `
+                    <td class="px-6 py-4 text-slate-500 font-medium">${s.number}</td>
+                    <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
+                    <td class="px-6 py-4 text-sm text-slate-400">${lastConsult}</td>
+                    <td class="px-6 py-4 text-right">
+                        <div class="flex justify-end gap-2">
+                            <button onclick="viewDetail(${s.id})" class="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">상세보기</button>
+                            <button onclick="deleteStudent(${s.id})" class="text-slate-300 hover:text-red-500 p-1.5 transition-colors">🗑️</button>
+                        </div>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-</script>
+        function viewDetail(id) {
+            currentStudentId = id;
+            const s = students.find(student => student.id === id);
+            if (!s) return;
+
+            document.getElementById('selectedStudentName').innerText = `👤 ${s.name}`;
+            document.getElementById('careerInput').value = s.career || "";
+            document.getElementById('seteukInput').value = s.seteuk || "";
+            document.getElementById('jongteukInput').value = s.jongteuk || "";
+            
+            renderConsultations(s);
+
+            document.getElementById('listView').style.display = 'none';
+            document.getElementById('detailView').style.display = 'block';
+            document.getElementById('backToListBtn').style.display = 'block';
+        }
+
+        function addConsultation() {
+            const category = prompt("상담 카테고리 (예: 자격증, 학과공부, 근태, 수행평가):", "일반상담");
+            const content = prompt("상담 내용을 입력하세요:");
+            
+            if (category && content) {
+                const s = students.find(student => student.id === currentStudentId);
+                s.consultation.push({
+                    date: new Date().toLocaleDateString(),
+                    category: category,
+                    content: content
+                });
+                saveData();
+                renderConsultations(s);
+            }
+        }
+
+        function renderConsultations(student) {
+            const container = document.getElementById('consultationList');
+            container.innerHTML = '';
+            
+            if (student.consultation.length === 0) {
+                container.innerHTML = `<div class="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl text-slate-400 text-sm italic">기록된 상담 내용이 없습니다.</div>`;
+                return;
+            }
+
+            [...student.consultation].reverse().forEach(c => {
+                const div = document.createElement('div');
+                div.className = "bg-slate-50 p-4 rounded-xl border border-slate-100";
+                div.innerHTML = `
+                    <div class="flex justify-between items-start mb-2">
+                        <span class="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-blue-600 uppercase">${c.category}</span>
+                        <span class="text-[10px] text-slate-400 font-medium">${c.date}</span>
+                    </div>
+                    <p class="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">${c.content}</p>
+                `;
+                container.appendChild(div);
+            });
+        }
+
+        function saveCurrentData() {
+            if (!currentStudentId) return;
+            const s = students.find(student => student.id === currentStudentId);
+            s.career = document.getElementById('careerInput').value;
+            s.seteuk = document.getElementById('seteukInput').value;
+            s.jongteuk = document.getElementById('jongteukInput').value;
+            saveData();
+        }
+
+        function deleteStudent(id) {
+            if (confirm("이 학생의 모든 기록을 삭제하시겠습니까?")) {
+                students = students.filter(s => s.id !== id);
+                saveData();
+                renderList();
+            }
+        }
+
+        function saveData() {
+            localStorage.setItem('classData_final', JSON.stringify(students));
+        }
+    </script>
+</body>
+</html>
