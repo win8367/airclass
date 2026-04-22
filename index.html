@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart AI 학급관리 (Universal-v5)</title>
+    <title>Smart AI 학급관리 (V6-Final)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -13,13 +13,15 @@
         textarea { resize: none; transition: all 0.2s; }
         .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        .v-badge { background: #ef4444; color: white; padding: 2px 8px; border-radius: 99px; font-size: 10px; font-weight: bold; margin-left: 8px; animation: pulse 2s infinite; }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
     </style>
 </head>
 <body>
     <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
             <span class="text-2xl">🤖</span>
-            <h1 class="text-xl font-bold text-slate-800">Smart AI <span class="text-blue-600">학급관리</span> <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded ml-2 font-mono">Universal-v5</span></h1>
+            <h1 class="text-xl font-bold text-slate-800">Smart AI <span class="text-blue-600">학급관리</span> <span class="v-badge">V6-FINAL</span></h1>
         </div>
         <div class="flex gap-2">
             <button onclick="toggleConfig()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500">⚙️ 설정</button>
@@ -30,7 +32,7 @@
     <div id="configLayer" class="hidden-view max-w-6xl mx-auto p-4">
         <div class="card p-6 bg-blue-50 border-blue-200">
             <h3 class="font-bold text-blue-800 mb-2">AI 모델 연결 설정</h3>
-            <p class="text-sm text-blue-600 mb-4">구글 AI 스튜디오 API 키를 입력하세요. (v5는 세 가지 모델을 자동 시도합니다)</p>
+            <p class="text-sm text-blue-600 mb-4">구글 AI 스튜디오 API 키를 입력하세요. (V6는 모든 모델을 자동 순회 탐색합니다)</p>
             <div class="flex gap-2">
                 <input type="password" id="apiKeyInput" placeholder="API Key 입력" class="flex-1 p-2 border rounded-lg outline-none">
                 <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">저장</button>
@@ -66,7 +68,7 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <h2 id="selectedStudentName" class="text-3xl font-bold text-slate-800">학생 이름</h2>
-                    <p class="text-slate-500 text-sm italic">상담 내역을 기반으로 AI가 생기부 초안을 자동 생성합니다.</p>
+                    <p class="text-slate-500 text-sm italic">기록을 바탕으로 AI가 세특과 종특 초안을 생성합니다.</p>
                 </div>
                 <button id="aiRunBtn" onclick="runAIAnalysis()" class="w-full md:w-auto bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-6 py-3 rounded-xl font-bold shadow-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
                     <span id="aiBtnIcon">✨</span> <span id="aiBtnText">AI로 생기부 자동 정리</span>
@@ -94,16 +96,16 @@
                 <div class="space-y-6">
                     <div class="bg-slate-900 p-6 rounded-2xl shadow-xl text-white">
                         <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-yellow-400">
-                            <span class="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 초안
+                            <span class="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 초안 (AI)
                         </h3>
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 italic">세부능력 및 특기사항</label>
-                                <textarea id="seteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI 분석 결과가 여기에 표시됩니다..."></textarea>
+                                <textarea id="seteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI 분석 결과가 표시됩니다..."></textarea>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 italic">행동특성 및 종합의견</label>
-                                <textarea id="jongteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI 분석 결과가 여기에 표시됩니다..."></textarea>
+                                <textarea id="jongteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI 분석 결과가 표시됩니다..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -113,7 +115,7 @@
     </main>
 
     <script>
-        let students = JSON.parse(localStorage.getItem('smartClass_v5') || '[]');
+        let students = JSON.parse(localStorage.getItem('smartClass_v6') || '[]');
         let currentStudentId = null;
         let apiKey = localStorage.getItem('gemini_api_key') || '';
 
@@ -237,7 +239,7 @@
             }
         }
 
-        function saveData() { localStorage.setItem('smartClass_v5', JSON.stringify(students)); }
+        function saveData() { localStorage.setItem('smartClass_v6', JSON.stringify(students)); }
 
         async function runAIAnalysis() {
             if(!apiKey) return alert("설정(⚙️)에서 API 키를 입력해 주세요.");
@@ -249,7 +251,6 @@
             const btnIcon = document.getElementById('aiBtnIcon');
 
             btn.disabled = true;
-            btnText.innerText = "연결 확인 중...";
             btnIcon.innerHTML = `<div class="loader"></div>`;
 
             const history = student.consultation.map(c => `[${c.category}] ${c.content}`).join('\n');
@@ -264,15 +265,20 @@ ${history}
 
 형식: [CAREER]내용[SETEUK]내용[JONGTEUK]내용`;
 
-            // 시도할 모델 리스트 (순서대로 시도)
-            const modelsToTry = ['gemini-1.5-flash', 'gemini-1.5-pro', 'gemini-pro'];
+            // V6 핵심: 시도할 모델 리스트 (가장 호환성 높은 순서)
+            const modelsToTry = [
+                { name: 'gemini-1.5-flash', ver: 'v1beta' },
+                { name: 'gemini-1.5-pro', ver: 'v1beta' },
+                { name: 'gemini-pro', ver: 'v1' }
+            ];
+
             let success = false;
             let lastError = "";
 
-            for (const modelName of modelsToTry) {
+            for (const model of modelsToTry) {
                 try {
-                    btnText.innerText = `${modelName} 시도...`;
-                    const url = `https://generativelanguage.googleapis.com/v1beta/models/${modelName}:generateContent?key=${apiKey.trim()}`;
+                    btnText.innerText = `${model.name} 시도 중...`;
+                    const url = `https://generativelanguage.googleapis.com/${model.ver}/models/${model.name}:generateContent?key=${apiKey.trim()}`;
                     
                     const response = await fetch(url, {
                         method: 'POST',
@@ -280,8 +286,9 @@ ${history}
                         body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                     });
 
-                    if (response.ok) {
-                        const data = await response.json();
+                    const data = await response.json();
+
+                    if (response.ok && data.candidates && data.candidates[0]) {
                         const aiResult = data.candidates[0].content.parts[0].text;
 
                         const c = aiResult.split('[CAREER]')[1]?.split('[SETEUK]')[0]?.trim();
@@ -294,21 +301,20 @@ ${history}
 
                         saveCurrentData();
                         success = true;
-                        alert(`✨ AI 리포트 생성 완료! (모델: ${modelName})`);
-                        break; // 성공 시 반복 중단
+                        alert(`✨ AI 리포트 생성 완료! (연결 모델: ${model.name})`);
+                        break;
                     } else {
-                        const errJson = await response.json();
-                        lastError = errJson.error?.message || "응답 실패";
-                        console.warn(`${modelName} 모델 시도 실패: ${lastError}`);
+                        lastError = data.error?.message || "응답 데이터 형식 오류";
+                        console.warn(`${model.name} 실패: ${lastError}`);
                     }
                 } catch (e) {
                     lastError = e.message;
-                    console.error(`${modelName} 연결 오류: ${e}`);
+                    console.error(`${model.name} 연결 오류: ${e}`);
                 }
             }
 
             if (!success) {
-                alert(`❌ 모든 모델 연결에 실패했습니다.\n\n마지막 오류: ${lastError}\n\n도움말: 구글 AI 스튜디오에서 API 키가 활성 상태인지, 그리고 'Gemini' 권한이 있는지 확인해 주세요.`);
+                alert(`❌ 모든 모델 연결에 실패했습니다.\n\n마지막 시도 오류: ${lastError}\n\n도움말: 구글 AI 스튜디오에서 API 키가 활성 상태인지 확인해 주세요.`);
             }
 
             btn.disabled = false;
