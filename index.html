@@ -30,7 +30,7 @@
     <div id="configLayer" class="hidden-view max-w-6xl mx-auto p-4">
         <div class="card p-6 bg-blue-50 border-blue-200">
             <h3 class="font-bold text-blue-800 mb-2">AI 설정 (Gemini API)</h3>
-            <p class="text-sm text-blue-600 mb-4">API 키를 다시 확인하고 저장해 주세요. (공백이 포함되지 않도록 주의)</p>
+            <p class="text-sm text-blue-600 mb-4">구글 AI 스튜디오에서 발급받은 API 키를 입력하세요. (Gemini Pro 모델 사용)</p>
             <div class="flex gap-2">
                 <input type="password" id="apiKeyInput" placeholder="API Key를 입력하세요" class="flex-1 p-2 border rounded-lg outline-none">
                 <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">저장</button>
@@ -39,6 +39,7 @@
     </div>
 
     <main class="max-w-6xl mx-auto p-4 md:p-8">
+        <!-- 리스트 뷰 -->
         <div id="listView">
             <div class="flex justify-between items-end mb-6">
                 <div>
@@ -63,6 +64,7 @@
             </div>
         </div>
 
+        <!-- 상세 뷰 -->
         <div id="detailView" class="hidden-view">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
@@ -76,6 +78,7 @@
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div class="lg:col-span-2 space-y-6">
+                    <!-- 상담 기록 섹션 -->
                     <div class="card p-6">
                         <div class="flex justify-between items-center mb-6">
                             <h3 class="text-lg font-bold flex items-center gap-2 text-slate-800">
@@ -86,6 +89,7 @@
                         <div id="consultationList" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div>
                     </div>
 
+                    <!-- 진로 지도 섹션 -->
                     <div class="card p-6 border-emerald-100 bg-emerald-50/30">
                         <h3 class="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
                             <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. AI 추천 진로 지도 방향
@@ -94,6 +98,7 @@
                     </div>
                 </div>
 
+                <!-- 생기부 초안 섹션 -->
                 <div class="space-y-6">
                     <div class="bg-slate-900 p-6 rounded-2xl shadow-xl text-white">
                         <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
@@ -123,7 +128,6 @@
         window.onload = () => {
             if(apiKey) document.getElementById('apiKeyInput').value = apiKey;
             renderList();
-            document.getElementById('backToListBtn').onclick = goHome;
         };
 
         function goHome() {
@@ -143,7 +147,7 @@
             if(!val) return alert("API 키를 입력해주세요.");
             apiKey = val;
             localStorage.setItem('gemini_api_key', val);
-            alert("키가 저장되었습니다. 다시 시도해 보세요.");
+            alert("키가 저장되었습니다.");
             toggleConfig();
         }
 
@@ -244,7 +248,7 @@
         function saveData() { localStorage.setItem('smartClass_v2', JSON.stringify(students)); }
 
         async function runAIAnalysis() {
-            if(!apiKey) return alert("설정(⚙️) 메뉴에서 Gemini API 키를 입력해 주세요.");
+            if(!apiKey) return alert("설정(⚙️) 메뉴에서 API 키를 입력해 주세요.");
             const student = students.find(x => x.id === currentStudentId);
             if(student.consultation.length === 0) return alert("분석할 상담 기록이 없습니다.");
 
@@ -260,8 +264,8 @@
             const promptText = `학생 이름: ${student.name}\n상담 기록:\n${history}\n위 내용을 바탕으로 학생생활기록부를 작성하라.\n1. [CAREER]: 진로 지도 방향 (3줄)\n2. [SETEUK]: 세부능력 및 특기사항 (~함, ~임 체)\n3. [JONGTEUK]: 행동특성 및 종합의견 (~함, ~임 체)\n형식: [CAREER]내용[SETEUK]내용[JONGTEUK]내용`;
 
             try {
-                // 모델을 gemini-1.5-flash로 유지하되, v1beta 엔드포인트를 사용하여 호환성을 높였습니다.
-                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+                // 모델을 gemini-pro로 변경하여 범용성을 높임
+                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey.trim()}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -276,9 +280,8 @@
 
                 const data = await response.json();
                 
-                // 데이터 응답 안전성 체크 (TypeError 방지)
-                if (!data.candidates || data.candidates.length === 0 || !data.candidates[0].content) {
-                    throw new Error("AI가 답변을 생성하지 못했습니다. 상담 내용을 조금 더 자세히 적어보세요.");
+                if (!data.candidates || data.candidates.length === 0) {
+                    throw new Error("AI가 답변을 생성하지 못했습니다.");
                 }
 
                 const aiResult = data.candidates[0].content.parts[0].text;
@@ -295,7 +298,7 @@
                 alert("AI 분석이 성공적으로 완료되었습니다!");
             } catch (error) {
                 console.error("AI Error:", error);
-                alert(`오류 발생: ${error.message}\n\n도움말: 404 오류가 계속된다면 구글 AI 스튜디오에서 API 키가 'Gemini 1.5 Flash' 모델을 사용할 수 있는지 확인해 주세요.`);
+                alert(`오류 발생: ${error.message}\n\n모델명을 'gemini-pro'로 변경하여 다시 시도합니다. 오류가 계속되면 키를 확인해 주세요.`);
             } finally {
                 btn.disabled = false;
                 btnText.innerText = "AI로 생기부 자동 정리";
