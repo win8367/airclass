@@ -2,126 +2,217 @@
     const { useState, useEffect } = React;
 
     const App = () => {
-        const [students, setStudents] = useState([
-            { id: 1, name: "홍길동", number: 1, consultation: [], career: "", seteuk: "", jongteuk: "" }
-        ]);
-        const [selectedStudentId, setSelectedStudentId] = useState(null);
+        // 데이터 로드 (로컬스토리지)
+        const [students, setStudents] = useState(() => {
+            try {
+                const savedData = localStorage.getItem('classData_v1');
+                return savedData ? JSON.parse(savedData) : [
+                    { id: 1, name: "예시학생", number: 1, consultation: [], career: "", seteuk: "", jongteuk: "" }
+                ];
+            } catch (e) {
+                return [];
+            }
+        });
+
+        const [selectedId, setSelectedId] = useState(null);
         const [activeTab, setActiveTab] = useState('list');
+
+        // 데이터 자동 저장
+        useEffect(() => {
+            localStorage.setItem('classData_v1', JSON.stringify(students));
+        }, [students]);
 
         const addStudent = () => {
             const name = prompt("학생 이름을 입력하세요:");
-            if (name) {
-                const newId = students.length > 0 ? Math.max(...students.map(s => s.id)) + 1 : 1;
+            if (name && name.trim()) {
+                const newId = Date.now();
+                const newNumber = students.length > 0 ? Math.max(...students.map(s => s.number)) + 1 : 1;
                 setStudents([...students, { 
-                    id: newId, 
-                    name, 
-                    number: students.length + 1, 
-                    consultation: [], 
-                    career: "", 
-                    seteuk: "", 
-                    jongteuk: "" 
+                    id: newId, name, number: newNumber, consultation: [], career: "", seteuk: "", jongteuk: "" 
                 }]);
             }
         };
 
-        const updateStudentData = (id, field, value) => {
-            setStudents(students.map(s => s.id === id ? { ...s, [field]: value } : s));
-        };
-
-        const addConsultation = (id) => {
-            const category = prompt("카테고리를 입력하세요 (자격증, 학과공부, 근태, 수행평가 등):");
-            const content = prompt("상담 내용을 입력하세요:");
-            if (category && content) {
-                const student = students.find(s => s.id === id);
-                const newConsults = [...student.consultation, { date: new Date().toLocaleDateString(), category, content }];
-                updateStudentData(id, 'consultation', newConsults);
+        const deleteStudent = (id) => {
+            if(confirm("이 학생의 모든 기록을 삭제할까요?")) {
+                setStudents(students.filter(s => s.id !== id));
+                if (selectedId === id) setSelectedId(null);
             }
         };
 
-        const selectedStudent = students.find(s => s.id === selectedStudentId);
+        const updateData = (id, field, value) => {
+            setStudents(students.map(s => s.id === id ? { ...s, [field]: value } : s));
+        };
+
+        const addConsult = (id) => {
+            const category = prompt("상담 항목 (예: 자격증, 학과공부, 근태, 수행평가):", "일반상담");
+            const content = prompt("상담 내용을 입력하세요:");
+            if (category && content) {
+                const updated = students.map(s => {
+                    if (s.id === id) {
+                        return { 
+                            ...s, 
+                            consultation: [...s.consultation, { 
+                                date: new Date().toLocaleDateString(), 
+                                category, 
+                                content 
+                            }] 
+                        };
+                    }
+                    return s;
+                });
+                setStudents(updated);
+            }
+        };
+
+        const selectedStudent = students.find(s => s.id === selectedId);
 
         return (
             <div className="min-h-screen flex flex-col">
-                <nav className="bg-white shadow-sm px-6 py-4 flex justify-between items-center">
-                    <h1 className="text-xl font-bold text-slate-800">🏫 Smart 학급관리 v1.0</h1>
-                    <div className="space-x-4">
-                        <button onClick={() => setActiveTab('list')} className={`px-3 py-2 text-sm font-medium ${activeTab === 'list' ? 'tab-active' : 'text-slate-500'}`}>학생 명단</button>
-                        {selectedStudentId && (
-                            <button onClick={() => setActiveTab('detail')} className={`px-3 py-2 text-sm font-medium ${activeTab === 'detail' ? 'tab-active' : 'text-slate-500'}`}>{selectedStudent.name} 상담기록</button>
+                <nav className="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
+                    <div className="flex items-center gap-2">
+                        <span className="text-2xl">🏫</span>
+                        <h1 className="text-xl font-bold text-slate-800 tracking-tight">Smart 학급관리 v1.2</h1>
+                    </div>
+                    <div className="flex gap-1">
+                        <button onClick={() => {setActiveTab('list'); setSelectedId(null);}} className={`px-4 py-2 text-sm transition-all ${activeTab === 'list' ? 'tab-active' : 'text-slate-500 hover:text-slate-700'}`}>학생 목록</button>
+                        {selectedId && (
+                            <button className="px-4 py-2 text-sm tab-active font-bold">
+                                👤 {selectedStudent?.name}
+                            </button>
                         )}
                     </div>
                 </nav>
 
-                <main className="flex-1 p-6 overflow-auto">
-                    {activeTab === 'list' ? (
-                        <div className="max-w-4xl mx-auto">
-                            <div className="flex justify-between items-center mb-6">
-                                <h2 className="text-2xl font-semibold text-slate-700">우리 반 학생 목록</h2>
-                                <button onClick={addStudent} className="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700">학생 추가</button>
+                <main className="flex-1 p-4 md:p-8">
+                    {activeTab === 'list' || !selectedStudent ? (
+                        <div className="max-w-4xl mx-auto animate-in fade-in duration-500">
+                            <div className="flex justify-between items-end mb-6">
+                                <div>
+                                    <h2 className="text-2xl font-bold text-slate-800">우리 반 명단</h2>
+                                    <p className="text-slate-500 text-sm">전체 학생 수: {students.length}명</p>
+                                </div>
+                                <button onClick={addStudent} className="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all active:scale-95">+ 학생 추가</button>
                             </div>
-                            <div className="bg-white rounded-xl shadow overflow-hidden">
+                            
+                            <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
                                 <table className="w-full text-left">
-                                    <thead className="bg-slate-50">
+                                    <thead className="bg-slate-50 border-b border-slate-200">
                                         <tr>
-                                            <th className="px-6 py-3 text-xs font-medium text-slate-500">번호</th>
-                                            <th className="px-6 py-3 text-xs font-medium text-slate-500">이름</th>
-                                            <th className="px-6 py-3 text-xs font-medium text-slate-500">최근 상담</th>
-                                            <th className="px-6 py-3 text-xs font-medium text-slate-500">관리</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">번호</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">이름</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase">최근 기록</th>
+                                            <th className="px-6 py-4 text-xs font-bold text-slate-400 uppercase text-right">관리</th>
                                         </tr>
                                     </thead>
                                     <tbody className="divide-y divide-slate-100">
-                                        {students.map(student => (
-                                            <tr key={student.id} className="hover:bg-slate-50">
-                                                <td className="px-6 py-4">{student.number}</td>
-                                                <td className="px-6 py-4 font-semibold text-blue-600">{student.name}</td>
-                                                <td className="px-6 py-4 text-sm text-slate-500">{student.consultation.length > 0 ? student.consultation[student.consultation.length - 1].date : "기록 없음"}</td>
-                                                <td className="px-6 py-4">
-                                                    <button onClick={() => { setSelectedStudentId(student.id); setActiveTab('detail'); }} className="text-sm bg-slate-100 px-3 py-1 rounded">상세 보기</button>
+                                        {students.map(s => (
+                                            <tr key={s.id} className="hover:bg-blue-50/50 transition-colors group">
+                                                <td className="px-6 py-4 text-slate-500 font-medium">{s.number}</td>
+                                                <td className="px-6 py-4 font-bold text-slate-700">{s.name}</td>
+                                                <td className="px-6 py-4 text-sm text-slate-400">
+                                                    {s.consultation.length > 0 ? s.consultation[s.consultation.length-1].date : "기록 없음"}
+                                                </td>
+                                                <td className="px-6 py-4 text-right">
+                                                    <div className="flex justify-end gap-2">
+                                                        <button onClick={() => {setSelectedId(s.id); setActiveTab('detail');}} className="bg-slate-100 text-slate-600 px-3 py-1.5 rounded-lg text-sm font-bold hover:bg-blue-600 hover:text-white transition-all">상세보기</button>
+                                                        <button onClick={() => deleteStudent(s.id)} className="text-slate-300 hover:text-red-500 p-1.5 transition-colors">🗑️</button>
+                                                    </div>
                                                 </td>
                                             </tr>
                                         ))}
                                     </tbody>
                                 </table>
                             </div>
+                            <p className="mt-6 text-center text-xs text-slate-400">※ 모든 정보는 선생님의 현재 브라우저(PC/모바일)에만 안전하게 저장됩니다.</p>
                         </div>
                     ) : (
-                        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-3 gap-6">
-                            <div className="md:col-span-2 space-y-6">
-                                <section className="bg-white p-6 rounded-xl shadow">
-                                    <div className="flex justify-between items-center mb-4">
-                                        <h3 className="text-lg font-bold">1. 개별 상담 내역</h3>
-                                        <button onClick={() => addConsultation(selectedStudent.id)} className="text-sm text-blue-600">+ 추가</button>
+                        <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 animate-in slide-in-from-bottom-4 duration-500">
+                            {/* 좌측/중앙: 상담 및 진로 */}
+                            <div className="lg:col-span-2 space-y-6">
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                    <div className="flex justify-between items-center mb-6">
+                                        <h3 className="text-lg font-bold text-slate-800 flex items-center gap-2">
+                                            <span className="w-2 h-6 bg-blue-600 rounded-full"></span> 1. 개별 상담 내역
+                                        </h3>
+                                        <button onClick={() => addConsult(selectedStudent.id)} className="bg-blue-50 text-blue-600 px-4 py-1.5 rounded-full text-sm font-bold hover:bg-blue-100 transition-colors">+ 기록 추가</button>
                                     </div>
-                                    <div className="space-y-3">
-                                        {selectedStudent.consultation.map((c, i) => (
-                                            <div key={i} className="border-l-4 border-blue-400 bg-slate-50 p-3 rounded-r-lg">
-                                                <div className="flex justify-between text-xs text-slate-400 mb-1"><span>[{c.category}]</span><span>{c.date}</span></div>
-                                                <p className="text-sm text-slate-700">{c.content}</p>
-                                            </div>
-                                        ))}
+                                    <div className="space-y-4 max-h-[400px] overflow-y-auto pr-2">
+                                        {selectedStudent.consultation.length === 0 ? (
+                                            <div className="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl text-slate-400 text-sm italic">아직 기록된 상담 내용이 없습니다.</div>
+                                        ) : (
+                                            [...selectedStudent.consultation].reverse().map((c, i) => (
+                                                <div key={i} className="bg-slate-50 p-4 rounded-xl border border-slate-100 relative group">
+                                                    <div className="flex justify-between items-start mb-2">
+                                                        <span className="px-2 py-0.5 bg-white border border-slate-200 rounded text-[10px] font-bold text-blue-600 uppercase">{c.category}</span>
+                                                        <span className="text-[10px] text-slate-400 font-medium">{c.date}</span>
+                                                    </div>
+                                                    <p className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">{c.content}</p>
+                                                </div>
+                                            ))
+                                        )}
                                     </div>
-                                </section>
-                                <section className="bg-white p-6 rounded-xl shadow">
-                                    <h3 className="text-lg font-bold mb-4">2. 진로 지도 방향</h3>
-                                    <textarea value={selectedStudent.career} onChange={(e) => updateStudentData(selectedStudent.id, 'career', e.target.value)} placeholder="진로 희망 및 지도 내용을 적어주세요." className="w-full h-32 p-3 text-sm border rounded-lg focus:ring-2 focus:ring-blue-500 outline-none" />
-                                </section>
+                                </div>
+
+                                <div className="bg-white p-6 rounded-2xl shadow-sm border border-slate-200">
+                                    <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
+                                        <span className="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. 진로 지도 방향
+                                    </h3>
+                                    <textarea 
+                                        className="w-full h-32 p-4 text-sm border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-400 focus:border-transparent outline-none transition-all resize-none bg-slate-50/50"
+                                        placeholder="학생의 진로 희망사항 및 지도 핵심 내용을 입력하세요..."
+                                        value={selectedStudent.career}
+                                        onChange={(e) => updateData(selectedStudent.id, 'career', e.target.value)}
+                                    />
+                                </div>
                             </div>
+
+                            {/* 우측: 생기부 섹션 */}
                             <div className="space-y-6">
-                                <section className="bg-indigo-50 p-6 rounded-xl shadow-inner border border-indigo-100">
-                                    <h3 className="text-lg font-bold text-indigo-800 mb-4">3. 생기부 정리</h3>
-                                    <div className="mb-4">
-                                        <label className="block text-xs font-bold text-indigo-600 mb-1">세특</label>
-                                        <textarea value={selectedStudent.seteuk} onChange={(e) => updateStudentData(selectedStudent.id, 'seteuk', e.target.value)} placeholder="세특 기록..." className="w-full h-40 p-3 text-sm border rounded-lg outline-none" />
+                                <div className="bg-indigo-900 p-6 rounded-2xl shadow-xl text-white">
+                                    <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+                                        <span className="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 초안 정리
+                                    </h3>
+                                    
+                                    <div className="space-y-6">
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">세부능력 및 특기사항 (세특)</label>
+                                            <textarea 
+                                                className="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none text-indigo-50 placeholder:text-indigo-400"
+                                                placeholder="과목별 역량 및 구체적 활동 근거 기록..."
+                                                value={selectedStudent.seteuk}
+                                                onChange={(e) => updateData(selectedStudent.id, 'seteuk', e.target.value)}
+                                            />
+                                        </div>
+
+                                        <div>
+                                            <label className="block text-[10px] font-bold text-indigo-300 uppercase mb-2 ml-1">행동특성 및 종합의견 (종특)</label>
+                                            <textarea 
+                                                className="w-full h-48 p-4 text-sm bg-indigo-800/50 border border-indigo-700 rounded-xl focus:ring-2 focus:ring-yellow-400 outline-none text-indigo-50 placeholder:text-indigo-400"
+                                                placeholder="학생의 성품, 리더십, 성장 가능성 기록..."
+                                                value={selectedStudent.jongteuk}
+                                                onChange={(e) => updateData(selectedStudent.id, 'jongteuk', e.target.value)}
+                                            />
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold text-indigo-600 mb-1">종특</label>
-                                        <textarea value={selectedStudent.jongteuk} onChange={(e) => updateStudentData(selectedStudent.id, 'jongteuk', e.target.value)} placeholder="종특 기록..." className="w-full h-40 p-3 text-sm border rounded-lg outline-none" />
+
+                                    <div className="mt-6 p-4 bg-indigo-800/30 rounded-xl border border-indigo-700/50">
+                                        <h4 className="text-xs font-bold text-yellow-400 mb-2">💡 작성 팁</h4>
+                                        <ul className="text-[11px] text-indigo-200 space-y-1">
+                                            <li>• 상담 기록의 키워드를 문장으로 연결하세요.</li>
+                                            <li>• '관찰 - 변화 - 성장'의 흐름으로 작성하세요.</li>
+                                            <li>• 구체적인 수행평가 사례를 포함하면 좋습니다.</li>
+                                        </ul>
                                     </div>
-                                </section>
+                                </div>
                             </div>
                         </div>
                     )}
                 </main>
+                
+                <footer className="py-6 text-center">
+                    <p className="text-slate-400 text-[10px]">© 2024 Class Management System - Made for Teachers</p>
+                </footer>
             </div>
         );
     };
