@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart 학급 관리 (AI Edition)</title>
+    <title>Smart AI 학급관리 (Stable Version)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -11,9 +11,7 @@
         .card { background: white; border-radius: 1rem; box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1); border: 1px solid #e2e8f0; }
         .hidden-view { display: none; }
         textarea { resize: none; transition: all 0.2s; }
-        textarea:focus { border-color: #3b82f6; ring: 2px; ring-color: #bfdbfe; }
-        /* 로딩 애니메이션 */
-        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3498db; border-radius: 50%; width: 20px; height: 20px; animation: spin 1s linear infinite; display: inline-block; vertical-align: middle; }
+        .loader { border: 3px solid #f3f3f3; border-top: 3px solid #3b82f6; border-radius: 50%; width: 18px; height: 18px; animation: spin 1s linear infinite; display: inline-block; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -25,7 +23,7 @@
             <h1 class="text-xl font-bold text-slate-800">Smart AI 학급관리</h1>
         </div>
         <div class="flex gap-2">
-            <button id="configBtn" onclick="toggleConfig()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500">⚙️ 설정</button>
+            <button onclick="toggleConfig()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500">⚙️ 설정</button>
             <button id="backToListBtn" class="hidden-view text-blue-600 font-bold px-4 py-2 hover:bg-blue-50 rounded-lg">← 목록으로</button>
         </div>
     </nav>
@@ -34,12 +32,11 @@
     <div id="configLayer" class="hidden-view max-w-6xl mx-auto p-4">
         <div class="card p-6 bg-blue-50 border-blue-200">
             <h3 class="font-bold text-blue-800 mb-2">AI 설정 (Gemini API)</h3>
-            <p class="text-sm text-blue-600 mb-4">AI 기능을 사용하려면 API 키가 필요합니다. 키는 브라우저에만 안전하게 저장됩니다.</p>
+            <p class="text-sm text-blue-600 mb-4">API 키를 다시 확인하고 저장해 주세요. (공백이 포함되지 않도록 주의)</p>
             <div class="flex gap-2">
                 <input type="password" id="apiKeyInput" placeholder="API Key를 입력하세요" class="flex-1 p-2 border rounded-lg outline-none">
                 <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">저장</button>
             </div>
-            <p class="text-[10px] text-blue-400 mt-2">발급처: https://aistudio.google.com/app/apikey (무료)</p>
         </div>
     </div>
 
@@ -49,7 +46,7 @@
             <div class="flex justify-between items-end mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800">우리 반 명단</h2>
-                    <p id="studentCount" class="text-slate-500 text-sm">전체 학생 수: 0명</p>
+                    <p id="studentCount" class="text-slate-500 text-sm">로딩 중...</p>
                 </div>
                 <button onclick="addStudent()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 active:scale-95 transition-all">+ 학생 추가</button>
             </div>
@@ -74,15 +71,14 @@
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
                     <h2 id="selectedStudentName" class="text-3xl font-bold text-slate-800">학생 이름</h2>
-                    <p class="text-slate-500 text-sm">상담 기록 및 AI 분석 리포트</p>
+                    <p class="text-slate-500 text-sm italic">상담 내용을 바탕으로 AI 리포트를 생성합니다.</p>
                 </div>
-                <button onclick="runAIAnalysis()" class="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
+                <button id="aiRunBtn" onclick="runAIAnalysis()" class="w-full md:w-auto bg-gradient-to-r from-purple-600 to-blue-600 text-white px-6 py-3 rounded-xl font-bold shadow-xl hover:opacity-90 active:scale-95 transition-all flex items-center justify-center gap-2">
                     <span id="aiBtnIcon">✨</span> <span id="aiBtnText">AI로 생기부 자동 정리</span>
                 </button>
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <!-- 좌측: 상담 기록 -->
                 <div class="lg:col-span-2 space-y-6">
                     <div class="card p-6">
                         <div class="flex justify-between items-center mb-6">
@@ -98,11 +94,10 @@
                         <h3 class="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
                             <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. AI 추천 진로 지도 방향
                         </h3>
-                        <textarea id="careerInput" oninput="saveCurrentData()" class="w-full h-32 p-4 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400" placeholder="상담 내용을 바탕으로 진로 방향을 AI가 제안하거나 직접 입력하세요..."></textarea>
+                        <textarea id="careerInput" oninput="saveCurrentData()" class="w-full h-32 p-4 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400" placeholder="상담 내용을 바탕으로 진로 방향을 입력하세요..."></textarea>
                     </div>
                 </div>
 
-                <!-- 우측: 생기부 정리 -->
                 <div class="space-y-6">
                     <div class="bg-slate-900 p-6 rounded-2xl shadow-xl text-white">
                         <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
@@ -111,11 +106,11 @@
                         <div class="space-y-6">
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 italic">세부능력 및 특기사항 (초안)</label>
-                                <textarea id="seteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI가 작성한 세특 내용이 여기에 표시됩니다..."></textarea>
+                                <textarea id="seteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI가 작성한 세특 내용..."></textarea>
                             </div>
                             <div>
                                 <label class="block text-[10px] font-bold text-slate-400 uppercase mb-2 ml-1 italic">행동특성 및 종합의견 (초안)</label>
-                                <textarea id="jongteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI가 작성한 종특 내용이 여기에 표시됩니다..."></textarea>
+                                <textarea id="jongteukInput" oninput="saveCurrentData()" class="w-full h-48 p-4 text-sm bg-slate-800 border border-slate-700 rounded-xl outline-none focus:ring-2 focus:ring-yellow-400 text-slate-100" placeholder="AI가 작성한 종특 내용..."></textarea>
                             </div>
                         </div>
                     </div>
@@ -123,10 +118,6 @@
             </div>
         </div>
     </main>
-
-    <footer class="py-10 text-center text-slate-400 text-xs">
-        © 2024 AI Class Manager - 데이터는 브라우저 로컬 저장소에 저장됩니다.
-    </footer>
 
     <script>
         let students = JSON.parse(localStorage.getItem('smartClass_v2') || '[]');
@@ -136,7 +127,6 @@
         window.onload = () => {
             if(apiKey) document.getElementById('apiKeyInput').value = apiKey;
             renderList();
-            
             document.getElementById('backToListBtn').onclick = goHome;
         };
 
@@ -149,32 +139,28 @@
         }
 
         function toggleConfig() {
-            const layer = document.getElementById('configLayer');
-            layer.classList.toggle('hidden-view');
+            document.getElementById('configLayer').classList.toggle('hidden-view');
         }
 
         function saveApiKey() {
             const val = document.getElementById('apiKeyInput').value.trim();
-            if(!val) return alert("키를 입력하세요.");
+            if(!val) return alert("API 키를 입력해주세요.");
             apiKey = val;
             localStorage.setItem('gemini_api_key', val);
-            alert("API 키가 저장되었습니다.");
+            alert("키가 저장되었습니다. 다시 시도해 보세요.");
             toggleConfig();
         }
 
         function addStudent() {
             const name = prompt("학생 이름을 입력하세요:");
             if (name && name.trim()) {
-                const newStudent = {
+                students.push({
                     id: Date.now(),
                     name: name.trim(),
                     number: students.length + 1,
                     consultation: [],
-                    career: "",
-                    seteuk: "",
-                    jongteuk: ""
-                };
-                students.push(newStudent);
+                    career: "", seteuk: "", jongteuk: ""
+                });
                 saveData();
                 renderList();
             }
@@ -184,13 +170,11 @@
             const tbody = document.getElementById('studentTableBody');
             document.getElementById('studentCount').innerText = `전체 학생 수: ${students.length}명`;
             tbody.innerHTML = '';
-
             if (students.length === 0) {
                 tbody.innerHTML = `<tr><td colspan="4" class="px-6 py-12 text-center text-slate-400 italic">등록된 학생이 없습니다.</td></tr>`;
                 return;
             }
-
-            students.sort((a,b)=>a.number - b.number).forEach(s => {
+            students.forEach(s => {
                 const lastDate = s.consultation.length > 0 ? s.consultation[s.consultation.length-1].date : '-';
                 const tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 transition-all";
@@ -214,9 +198,7 @@
             document.getElementById('careerInput').value = s.career || '';
             document.getElementById('seteukInput').value = s.seteuk || '';
             document.getElementById('jongteukInput').value = s.jongteuk || '';
-            
             renderConsultations(s);
-            
             document.getElementById('listView').classList.add('hidden-view');
             document.getElementById('detailView').classList.remove('hidden-view');
             document.getElementById('backToListBtn').classList.remove('hidden-view');
@@ -224,15 +206,11 @@
         }
 
         function addConsultation() {
-            const cat = prompt("카테고리 (자격증, 학과공부, 근태, 수행평가 등):", "일반상담");
+            const cat = prompt("상담 항목 (예: 자격증, 근태, 수행평가 등):", "일반상담");
             const msg = prompt("상담 내용을 입력하세요:");
             if(cat && msg) {
                 const s = students.find(x => x.id === currentStudentId);
-                s.consultation.push({
-                    date: new Date().toLocaleDateString(),
-                    category: cat,
-                    content: msg
-                });
+                s.consultation.push({ date: new Date().toLocaleDateString(), category: cat, content: msg });
                 saveData();
                 renderConsultations(s);
             }
@@ -240,21 +218,11 @@
 
         function renderConsultations(student) {
             const list = document.getElementById('consultationList');
-            list.innerHTML = '';
-            if(student.consultation.length === 0) {
-                list.innerHTML = `<div class="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl text-slate-300 text-sm">상담 기록이 없습니다.</div>`;
-                return;
-            }
+            list.innerHTML = student.consultation.length === 0 ? `<div class="text-center py-10 border-2 border-dashed border-slate-100 rounded-xl text-slate-300 text-sm">상담 기록이 없습니다.</div>` : '';
             [...student.consultation].reverse().forEach(c => {
                 const d = document.createElement('div');
                 d.className = "bg-slate-50 p-4 rounded-xl border border-slate-100";
-                d.innerHTML = `
-                    <div class="flex justify-between items-center mb-1">
-                        <span class="text-[10px] font-bold text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-100 uppercase">${c.category}</span>
-                        <span class="text-[10px] text-slate-400 font-medium">${c.date}</span>
-                    </div>
-                    <p class="text-sm text-slate-700 leading-relaxed">${c.content}</p>
-                `;
+                d.innerHTML = `<div class="flex justify-between items-center mb-1"><span class="text-[10px] font-bold text-blue-600 bg-white px-2 py-0.5 rounded border border-blue-100 uppercase">${c.category}</span><span class="text-[10px] text-slate-400">${c.date}</span></div><p class="text-sm text-slate-700">${c.content}</p>`;
                 list.appendChild(d);
             });
         }
@@ -270,81 +238,64 @@
         }
 
         function deleteStudent(id) {
-            if(confirm("정말 삭제하시겠습니까? 모든 기록이 사라집니다.")) {
+            if(confirm("정말 삭제하시겠습니까?")) {
                 students = students.filter(x => x.id !== id);
                 saveData();
                 renderList();
             }
         }
 
-        function saveData() {
-            localStorage.setItem('smartClass_v2', JSON.stringify(students));
-        }
+        function saveData() { localStorage.setItem('smartClass_v2', JSON.stringify(students)); }
 
         async function runAIAnalysis() {
-            if(!apiKey) return alert("설정(⚙️) 메뉴에서 Gemini API Key를 먼저 입력해 주세요.");
-            
+            if(!apiKey) return alert("설정(⚙️) 메뉴에서 Gemini API 키를 입력해 주세요.");
             const student = students.find(x => x.id === currentStudentId);
-            if(student.consultation.length === 0) return alert("분석할 상담 기록이 없습니다. 먼저 상담 내용을 입력해 주세요.");
+            if(student.consultation.length === 0) return alert("분석할 상담 기록이 없습니다.");
 
+            const btn = document.getElementById('aiRunBtn');
             const btnText = document.getElementById('aiBtnText');
             const btnIcon = document.getElementById('aiBtnIcon');
-            
-            btnText.innerText = "AI 분석 중...";
+
+            btn.disabled = true;
+            btnText.innerText = "AI 분석 진행 중...";
             btnIcon.innerHTML = `<div class="loader"></div>`;
 
-            // 상담 데이터를 텍스트로 변환
-            const consultHistory = student.consultation.map(c => `[${c.date} / ${c.category}] ${c.content}`).join('\n');
-            
-            const prompt = `
-당신은 대한민국 고등학교 교사입니다. 다음 상담 기록을 바탕으로 학생의 학생생활기록부를 작성해 주세요.
-
-학생 이름: ${student.name}
-상담 기록:
-${consultHistory}
-
-요구사항:
-1. '진로 지도 방향': 학생의 강점과 상담 내용을 바탕으로 앞으로의 지도 방향을 3줄 내외로 요약.
-2. '세부능력 및 특기사항(세특)': 상담 내용 중 학업, 수행평가, 자격증 관련 내용을 역량 중심으로 전문적인 문체로 작성. (~함, ~임 체)
-3. '행동특성 및 종합의견(종특)': 근태, 인성, 평소 태도를 바탕으로 학생의 성장 가능성을 작성. (~함, ~임 체)
-
-출력 형식 (반드시 이 형식을 지키고 다른 말은 하지 마세요):
-[CAREER]
-내용...
-[SETEUK]
-내용...
-[JONGTEUK]
-내용...
-            `;
+            const history = student.consultation.map(c => `[${c.category}] ${c.content}`).join('\n');
+            const promptText = `학생 이름: ${student.name}\n상담 기록:\n${history}\n위 내용을 바탕으로 학생생활기록부를 작성하라.\n1. [CAREER]: 진로 지도 방향 (3줄)\n2. [SETEUK]: 세부능력 및 특기사항 (~함, ~임 체)\n3. [JONGTEUK]: 행동특성 및 종합의견 (~함, ~임 체)\n형식: [CAREER]내용[SETEUK]내용[JONGTEUK]내용`;
 
             try {
-                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
+                // 404 에러 방지를 위해 가장 안정적인 최신 엔드포인트와 모델명을 사용합니다.
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
+                
+                const response = await fetch(url, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        contents: [{ parts: [{ text: prompt }] }]
-                    })
+                    body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
                 });
 
+                if (!response.ok) {
+                    const errData = await response.json();
+                    throw new Error(errData.error?.message || "서버 응답 오류");
+                }
+
                 const data = await response.json();
-                const aiText = data.candidates[0].content.parts[0].text;
+                const aiResult = data.candidates[0].content.parts[0].text;
 
-                // 결과 파싱
-                const career = aiText.split('[CAREER]')[1]?.split('[SETEUK]')[0]?.trim();
-                const seteuk = aiText.split('[SETEUK]')[1]?.split('[JONGTEUK]')[0]?.trim();
-                const jongteuk = aiText.split('[JONGTEUK]')[1]?.trim();
+                const c = aiResult.split('[CAREER]')[1]?.split('[SETEUK]')[0]?.trim();
+                const s = aiResult.split('[SETEUK]')[1]?.split('[JONGTEUK]')[0]?.trim();
+                const j = aiResult.split('[JONGTEUK]')[1]?.trim();
 
-                if(career) document.getElementById('careerInput').value = career;
-                if(seteuk) document.getElementById('seteukInput').value = seteuk;
-                if(jongteuk) document.getElementById('jongteukInput').value = jongteuk;
+                if(c) document.getElementById('careerInput').value = c;
+                if(s) document.getElementById('seteukInput').value = s;
+                if(j) document.getElementById('jongteukInput').value = j;
 
                 saveCurrentData();
-                alert("AI 분석이 완료되었습니다!");
-
+                alert("AI 분석이 성공적으로 완료되었습니다!");
             } catch (error) {
-                console.error(error);
-                alert("AI 연결 중 오류가 발생했습니다. API 키를 확인해 주세요.");
+                console.error("AI Error:", error);
+                alert(`오류 발생: ${error.message}\n\n도움말: 404 오류가 계속된다면 구글 AI 스튜디오에서 API 키가 'Gemini 1.5 Flash' 모델을 사용할 수 있는지 확인해 주세요.`);
             } finally {
+                btn.disabled = false;
                 btnText.innerText = "AI로 생기부 자동 정리";
                 btnIcon.innerHTML = "✨";
             }
