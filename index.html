@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Smart AI 학급관리 (Stable Version)</title>
+    <title>Smart AI 학급관리 (Final v3)</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
@@ -19,18 +19,18 @@
     <nav class="bg-white border-b border-slate-200 px-6 py-4 flex justify-between items-center sticky top-0 z-50">
         <div class="flex items-center gap-2 cursor-pointer" onclick="goHome()">
             <span class="text-2xl">🤖</span>
-            <h1 class="text-xl font-bold text-slate-800">Smart AI 학급관리 <span class="text-[10px] bg-green-100 text-green-600 px-2 py-0.5 rounded ml-2">Stable v2</span></h1>
+            <h1 class="text-xl font-bold text-slate-800">Smart AI 학급관리 <span class="text-[10px] bg-blue-100 text-blue-600 px-2 py-0.5 rounded ml-2">Final v3</span></h1>
         </div>
         <div class="flex gap-2">
             <button onclick="toggleConfig()" class="p-2 hover:bg-slate-100 rounded-lg text-slate-500">⚙️ 설정</button>
-            <button id="backToListBtn" class="hidden-view text-blue-600 font-bold px-4 py-2 hover:bg-blue-50 rounded-lg">← 목록으로</button>
+            <button id="backToListBtn" class="hidden-view text-blue-600 font-bold px-4 py-2 hover:bg-blue-50 rounded-lg" onclick="goHome()">← 목록으로</button>
         </div>
     </nav>
 
     <div id="configLayer" class="hidden-view max-w-6xl mx-auto p-4">
         <div class="card p-6 bg-blue-50 border-blue-200">
             <h3 class="font-bold text-blue-800 mb-2">AI 설정 (Gemini API)</h3>
-            <p class="text-sm text-blue-600 mb-4">구글 AI 스튜디오에서 발급받은 API 키를 입력하세요. (Gemini Pro 모델 사용)</p>
+            <p class="text-sm text-blue-600 mb-4">구글 AI 스튜디오에서 발급받은 API 키를 입력하세요.</p>
             <div class="flex gap-2">
                 <input type="password" id="apiKeyInput" placeholder="API Key를 입력하세요" class="flex-1 p-2 border rounded-lg outline-none">
                 <button onclick="saveApiKey()" class="bg-blue-600 text-white px-4 py-2 rounded-lg font-bold">저장</button>
@@ -39,15 +39,15 @@
     </div>
 
     <main class="max-w-6xl mx-auto p-4 md:p-8">
+        <!-- 목록 보기 -->
         <div id="listView">
             <div class="flex justify-between items-end mb-6">
                 <div>
                     <h2 class="text-2xl font-bold text-slate-800">우리 반 명단</h2>
                     <p id="studentCount" class="text-slate-500 text-sm">로딩 중...</p>
                 </div>
-                <button onclick="addStudent()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 active:scale-95 transition-all">+ 학생 추가</button>
+                <button onclick="addStudent()" class="bg-blue-600 text-white px-5 py-2.5 rounded-xl font-semibold shadow-lg hover:bg-blue-700 transition-all">+ 학생 추가</button>
             </div>
-            
             <div class="card overflow-hidden">
                 <table class="w-full text-left">
                     <thead class="bg-slate-50 border-b border-slate-200">
@@ -63,6 +63,7 @@
             </div>
         </div>
 
+        <!-- 상세 보기 -->
         <div id="detailView" class="hidden-view">
             <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                 <div>
@@ -75,6 +76,7 @@
             </div>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <!-- 왼쪽 섹션: 상담 및 진로 -->
                 <div class="lg:col-span-2 space-y-6">
                     <div class="card p-6">
                         <div class="flex justify-between items-center mb-6">
@@ -85,7 +87,6 @@
                         </div>
                         <div id="consultationList" class="space-y-4 max-h-[400px] overflow-y-auto pr-2"></div>
                     </div>
-
                     <div class="card p-6 border-emerald-100 bg-emerald-50/30">
                         <h3 class="text-lg font-bold flex items-center gap-2 mb-4 text-slate-800">
                             <span class="w-2 h-6 bg-emerald-500 rounded-full"></span> 2. AI 추천 진로 지도 방향
@@ -93,10 +94,10 @@
                         <textarea id="careerInput" oninput="saveCurrentData()" class="w-full h-32 p-4 text-sm bg-white border border-slate-200 rounded-xl outline-none focus:ring-2 focus:ring-emerald-400" placeholder="상담 내용을 바탕으로 진로 방향을 입력하세요..."></textarea>
                     </div>
                 </div>
-
+                <!-- 오른쪽 섹션: 생기부 초안 -->
                 <div class="space-y-6">
                     <div class="bg-slate-900 p-6 rounded-2xl shadow-xl text-white">
-                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2">
+                        <h3 class="text-lg font-bold mb-4 flex items-center gap-2 text-yellow-400">
                             <span class="w-2 h-6 bg-yellow-400 rounded-full"></span> 3. 생기부 초안 (AI)
                         </h3>
                         <div class="space-y-6">
@@ -116,7 +117,7 @@
     </main>
 
     <script>
-        let students = JSON.parse(localStorage.getItem('smartClass_v2') || '[]');
+        let students = JSON.parse(localStorage.getItem('smartClass_v3') || '[]');
         let currentStudentId = null;
         let apiKey = localStorage.getItem('gemini_api_key') || '';
 
@@ -142,7 +143,7 @@
             if(!val) return alert("API 키를 입력해주세요.");
             apiKey = val;
             localStorage.setItem('gemini_api_key', val);
-            alert("키가 저장되었습니다.");
+            alert("키가 저장되었습니다. 이제 AI 기능을 사용할 수 있습니다.");
             toggleConfig();
         }
 
@@ -172,14 +173,16 @@
             students.forEach(s => {
                 const lastDate = s.consultation.length > 0 ? s.consultation[s.consultation.length-1].date : '-';
                 const tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 transition-all";
+                tr.className = "hover:bg-slate-50 transition-all cursor-pointer";
+                tr.onclick = (e) => {
+                    if(e.target.tagName !== 'BUTTON') viewDetail(s.id);
+                };
                 tr.innerHTML = `
                     <td class="px-6 py-4 text-slate-400 font-medium">${s.number}</td>
                     <td class="px-6 py-4 font-bold text-slate-700">${s.name}</td>
                     <td class="px-6 py-4 text-sm text-slate-400">${lastDate}</td>
                     <td class="px-6 py-4 text-right">
-                        <button onclick="viewDetail(${s.id})" class="bg-blue-600 text-white px-3 py-1.5 rounded-lg text-xs font-bold hover:shadow-lg transition-all">상세/상담</button>
-                        <button onclick="deleteStudent(${s.id})" class="ml-2 text-slate-300 hover:text-red-500">🗑️</button>
+                        <button onclick="event.stopPropagation(); deleteStudent(${s.id})" class="text-slate-300 hover:text-red-500">🗑️</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -201,7 +204,7 @@
         }
 
         function addConsultation() {
-            const cat = prompt("상담 항목 (예: 자격증, 근태, 수행평가 등):", "일반상담");
+            const cat = prompt("항목 (자격증, 학과공부, 근태, 수행평가 등):", "일반상담");
             const msg = prompt("상담 내용을 입력하세요:");
             if(cat && msg) {
                 const s = students.find(x => x.id === currentStudentId);
@@ -233,19 +236,19 @@
         }
 
         function deleteStudent(id) {
-            if(confirm("정말 삭제하시겠습니까?")) {
+            if(confirm("이 학생의 모든 데이터를 삭제하시겠습니까?")) {
                 students = students.filter(x => x.id !== id);
                 saveData();
                 renderList();
             }
         }
 
-        function saveData() { localStorage.setItem('smartClass_v2', JSON.stringify(students)); }
+        function saveData() { localStorage.setItem('smartClass_v3', JSON.stringify(students)); }
 
         async function runAIAnalysis() {
-            if(!apiKey) return alert("설정(⚙️) 메뉴에서 API 키를 입력해 주세요.");
+            if(!apiKey) return alert("설정(⚙️) 메뉴에서 API 키를 먼저 입력해 주세요.");
             const student = students.find(x => x.id === currentStudentId);
-            if(student.consultation.length === 0) return alert("분석할 상담 기록이 없습니다.");
+            if(!student || student.consultation.length === 0) return alert("분석할 상담 기록이 없습니다.");
 
             const btn = document.getElementById('aiRunBtn');
             const btnText = document.getElementById('aiBtnText');
@@ -256,11 +259,20 @@
             btnIcon.innerHTML = `<div class="loader"></div>`;
 
             const history = student.consultation.map(c => `[${c.category}] ${c.content}`).join('\n');
-            const promptText = `학생 이름: ${student.name}\n상담 기록:\n${history}\n위 내용을 바탕으로 학생생활기록부를 작성하라.\n1. [CAREER]: 진로 지도 방향 (3줄)\n2. [SETEUK]: 세부능력 및 특기사항 (~함, ~임 체)\n3. [JONGTEUK]: 행동특성 및 종합의견 (~함, ~임 체)\n형식: [CAREER]내용[SETEUK]내용[JONGTEUK]내용`;
+            const promptText = `학생 이름: ${student.name}
+상담 기록:
+${history}
+
+위 내용을 바탕으로 학생생활기록부를 작성하라.
+1. [CAREER]: 진로 지도 방향 (3줄 이내)
+2. [SETEUK]: 세부능력 및 특기사항 (~함, ~임 체)
+3. [JONGTEUK]: 행동특성 및 종합의견 (~함, ~임 체)
+
+형식: [CAREER]내용[SETEUK]내용[JONGTEUK]내용`;
 
             try {
-                // 모델을 gemini-pro로 변경하여 범용성을 높임
-                const url = `https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=${apiKey.trim()}`;
+                // 모델명을 gemini-1.5-flash로 강제 지정하고 v1beta 엔드포인트 사용 (가장 최신 호환성)
+                const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`;
                 
                 const response = await fetch(url, {
                     method: 'POST',
@@ -269,18 +281,18 @@
                 });
 
                 if (!response.ok) {
-                    const errData = await response.json();
-                    throw new Error(errData.error?.message || "서버 응답 오류");
+                    const errorData = await response.json();
+                    throw new Error(errorData.error?.message || "연결 오류");
                 }
 
                 const data = await response.json();
-                
-                if (!data.candidates || data.candidates.length === 0) {
-                    throw new Error("AI가 답변을 생성하지 못했습니다.");
+                if (!data.candidates || !data.candidates[0].content) {
+                    throw new Error("AI 응답 형식이 올바르지 않습니다.");
                 }
 
                 const aiResult = data.candidates[0].content.parts[0].text;
 
+                // 데이터 파싱
                 const c = aiResult.split('[CAREER]')[1]?.split('[SETEUK]')[0]?.trim();
                 const s = aiResult.split('[SETEUK]')[1]?.split('[JONGTEUK]')[0]?.trim();
                 const j = aiResult.split('[JONGTEUK]')[1]?.trim();
@@ -290,10 +302,10 @@
                 if(j) document.getElementById('jongteukInput').value = j;
 
                 saveCurrentData();
-                alert("AI 분석이 성공적으로 완료되었습니다!");
+                alert("✨ AI 분석이 완료되었습니다!");
             } catch (error) {
                 console.error("AI Error:", error);
-                alert(`오류 발생: ${error.message}\n\n모델명을 'gemini-pro'로 변경하여 다시 시도합니다. 오류가 계속되면 키를 확인해 주세요.`);
+                alert(`오류 발생: ${error.message}\n\n1분 뒤에 다시 시도하거나 API 키를 확인해 주세요.`);
             } finally {
                 btn.disabled = false;
                 btnText.innerText = "AI로 생기부 자동 정리";
